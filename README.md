@@ -1,5 +1,11 @@
 # ⚡ ESP32 Smart AC Power Monitor & Power Factor Corrector
 
+[![Platform](https://img.shields.io/badge/platform-ESP32-blue)](https://www.espressif.com/en/products/socs/esp32)
+[![Language](https://img.shields.io/badge/language-C++-orange)](https://isocpp.org/)
+[![Docs](https://img.shields.io/badge/docs-Wiki-blue)](https://github.com/kumareshan3010/esp32-smart-power-monitor/wiki)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Status](https://img.shields.io/badge/status-Completed-brightgreen)]()
+
 > A professional-grade AC power monitoring and automatic power factor correction system built on ESP32 WROOM-32, with real-time cloud dashboards on Blynk and Adafruit IO.
 
 **Author:** Kumareshan V — [@kumareshan3010](https://github.com/kumareshan3010)
