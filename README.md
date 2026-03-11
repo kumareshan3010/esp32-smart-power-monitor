@@ -14,6 +14,14 @@ All data is pushed live to **Blynk** (1s refresh) and **Adafruit IO** (3s refres
 
 ---
 
+## 📖 Documentation
+
+Detailed explanations and design documentation are available in the Wiki:
+
+👉 https://github.com/kumareshan3010/esp32-smart-power-monitor/wiki
+
+---
+
 ## ✨ Features
 
 | Category | Details |
