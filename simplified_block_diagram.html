@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 Smart Power Monitor – Block Diagram</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080c14;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px;
+    min-height: 100vh;
+  }
+  .header { text-align: center; margin-bottom: 24px; }
+  .header .sub  { color: #3b82f6; font-size: 11px; letter-spacing: 7px; margin-bottom: 8px; }
+  .header .title { color: #f1f5f9; font-size: 22px; font-weight: 700; letter-spacing: 3px; }
+  .header .desc  { color: #475569; font-size: 10px; margin-top: 6px; letter-spacing: 3px; }
+  svg { display: block; max-width: 100%; height: auto; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    justify-content: center; margin-top: 22px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+  .legend-label { color: #64748b; font-size: 10px; letter-spacing: 1px; }
+  .hint { color: #1e3a5f; font-size: 9px; margin-top: 14px; letter-spacing: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="sub">SYSTEM ARCHITECTURE</div>
+  <div class="title">⚡ ESP32 SMART POWER MONITOR</div>
+  <div class="desc">AC MONITORING · PF CORRECTION · IoT DASHBOARD</div>
+</div>
+
+<svg id="diagram" width="820" height="600" viewBox="0 0 820 600"></svg>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div><span class="legend-label">Power Input</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ea580c"></div><span class="legend-label">Sensors</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1d4ed8"></div><span class="legend-label">MCU</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6d28d9"></div><span class="legend-label">Processing</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#be185d"></div><span class="legend-label">PF Correction</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#15803d"></div><span class="legend-label">Cloud / IoT</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0f766e"></div><span class="legend-label">Storage</span></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7e22ce"></div><span class="legend-label">Detection</span></div>
+</div>
+<div class="hint">HOVER BLOCKS TO HIGHLIGHT CONNECTIONS</div>
+
+<script>
+const NODES = [
+  { id:"ac",       x:310, y:16,  w:180, h:48,  label:"AC MAINS",          sub:"220V / 50Hz",                                      fill:"#dc2626" },
+  { id:"zmpt",     x:40,  y:112, w:170, h:52,  label:"ZMPT101B",          sub:"Voltage Sensor · GPIO 34",                         fill:"#ea580c" },
+  { id:"acs712",   x:315, y:112, w:170, h:52,  label:"ACS712-30A",        sub:"Current Sensor · GPIO 35",                         fill:"#ea580c" },
+  { id:"zcd",      x:590, y:112, w:170, h:52,  label:"ZCD Circuit",       sub:"Optocoupler · GPIO 32",                            fill:"#ea580c" },
+  { id:"esp32",    x:225, y:228, w:350, h:66,  label:"ESP32 WROOM-32",    sub:"Core MCU · Wi-Fi · ADC · ISR",                     fill:"#1d4ed8" },
+  { id:"ntp",      x:615, y:228, w:155, h:55,  label:"NTP SERVER",        sub:"IST Timezone Sync",                                fill:"#0369a1" },
+  { id:"proc",     x:170, y:362, w:455, h:58,  label:"SIGNAL PROCESSING", sub:"RMS · P/Q/S · PF · Impedance · Freq · Load Type",  fill:"#6d28d9" },
+  { id:"pfc",      x:10,  y:362, w:145, h:58,  label:"PF CORRECTION",     sub:"ZVS · 3-cycle hysteresis",                         fill:"#be185d" },
+  { id:"capbank",  x:10,  y:492, w:145, h:58,  label:"CAPACITOR BANK",    sub:"7 Relays · 1–36µF range",                          fill:"#9d174d" },
+  { id:"nvs",      x:645, y:362, w:155, h:58,  label:"NVS STORAGE",       sub:"Energy · Extremes · PF Count",                     fill:"#0f766e" },
+  { id:"blynk",    x:170, y:492, w:145, h:58,  label:"BLYNK IoT",         sub:"Realtime · 1s · V0–V62",                           fill:"#15803d" },
+  { id:"aio",      x:330, y:492, w:145, h:58,  label:"ADAFRUIT IO",       sub:"Logging · 3s refresh",                             fill:"#166534" },
+  { id:"inrush",   x:490, y:492, w:145, h:58,  label:"INRUSH DETECT",     sub:"Ratio-based · Event log",                          fill:"#7e22ce" },
+  { id:"chiptemp", x:645, y:492, w:155, h:58,  label:"CHIP TEMP",         sub:"ESP32 internal sensor",                            fill:"#134e4a" },
+];
+
+const EDGES = [
+  { from:"ac",      to:"zmpt",    label:"AC signal" },
+  { from:"ac",      to:"acs712",  label:"AC signal" },
+  { from:"ac",      to:"zcd",     label:"AC signal" },
+  { from:"zmpt",    to:"esp32",   label:"ADC" },
+  { from:"acs712",  to:"esp32",   label:"ADC" },
+  { from:"zcd",     to:"esp32",   label:"ISR" },
+  { from:"ntp",     to:"esp32",   label:"Wi-Fi" },
+  { from:"esp32",   to:"proc",    label:"raw samples" },
+  { from:"esp32",   to:"pfc",     label:"PF value" },
+  { from:"esp32",   to:"nvs",     label:"persist" },
+  { from:"esp32",   to:"chiptemp",label:"sensor" },
+  { from:"proc",    to:"blynk",   label:"V-pins" },
+  { from:"proc",    to:"aio",     label:"feeds" },
+  { from:"proc",    to:"inrush",  label:"I ratio" },
+  { from:"pfc",     to:"capbank", label:"relay cmds" },
+  { from:"capbank", to:"ac",      label:"PF correction", dashed:true },
+];
+
+const svg = document.getElementById('diagram');
+const ns = 'http://www.w3.org/2000/svg';
+const nodeMap = {};
+NODES.forEach(n => nodeMap[n.id] = n);
+
+function el(tag, attrs={}, parent=null) {
+  const e = document.createElementNS(ns, tag);
+  for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+// Defs
+const defs = el('defs', {}, svg);
+function makeMarker(id, color) {
+  const m = el('marker', { id, markerWidth:8, markerHeight:6, refX:7, refY:3, orient:'auto' }, defs);
+  el('polygon', { points:'0 0, 8 3, 0 6', fill:color }, m);
+}
+makeMarker('arr', '#2d3748');
+makeMarker('arrHot', '#94a3b8');
+
+const glowFilter = el('filter', { id:'glow', x:'-30%', y:'-30%', width:'160%', height:'160%' }, defs);
+const blur = el('feGaussianBlur', { stdDeviation:'4', result:'blur' }, glowFilter);
+const merge = el('feMerge', {}, glowFilter);
+el('feMergeNode', { in:'blur' }, merge);
+el('feMergeNode', { in:'SourceGraphic' }, merge);
+
+// Grid dots
+for (let row = 0; row < 21; row++) {
+  for (let col = 0; col < 28; col++) {
+    el('circle', { cx: col*30, cy: row*30, r: 0.8, fill:'#1e293b' }, svg);
+  }
+}
+
+// Edge layer
+const edgeLayer = el('g', {}, svg);
+// Node layer
+const nodeLayer = el('g', {}, svg);
+
+function cx(n) { return n.x + n.w/2; }
+function cy(n) { return n.y + n.h/2; }
+
+function makePath(a, b) {
+  const ax=cx(a), ay=a.y+a.h, bx=cx(b), by=b.y;
+  const my=(ay+by)/2;
+  return `M${ax},${ay} C${ax},${my} ${bx},${my} ${bx},${by}`;
+}
+
+// Draw edges
+const edgeEls = [];
+EDGES.forEach((e,i) => {
+  const a = nodeMap[e.from], b = nodeMap[e.to];
+  if (!a||!b) return;
+  const mid = { x:(cx(a)+cx(b))/2, y:(cy(a)+cy(b))/2 };
+  const path = el('path', {
+    d: makePath(a,b),
+    fill:'none',
+    stroke:'#1e293b',
+    'stroke-width':1.5,
+    ...(e.dashed ? {'stroke-dasharray':'6,4'} : {}),
+    'marker-end':'url(#arr)',
+  }, edgeLayer);
+  const lbl = el('text', {
+    x: mid.x, y: mid.y-5,
+    fill:'#64748b', 'font-size':8,
+    'text-anchor':'middle',
+    'font-family':'Courier New, monospace',
+    opacity:0,
+  }, edgeLayer);
+  lbl.textContent = e.label;
+  edgeEls.push({ path, lbl, from:e.from, to:e.to });
+});
+
+// Draw nodes
+NODES.forEach(node => {
+  const g = el('g', { style:'cursor:pointer' }, nodeLayer);
+
+  // Shadow
+  el('rect', { x:node.x+3, y:node.y+3, width:node.w, height:node.h, rx:7, fill:'#000', opacity:0.4 }, g);
+  // Box
+  const rect = el('rect', {
+    x:node.x, y:node.y, width:node.w, height:node.h, rx:7,
+    fill:node.fill, opacity:0.85,
+    stroke:'rgba(255,255,255,0.1)', 'stroke-width':1,
+  }, g);
+  // Shine
+  el('rect', { x:node.x+4, y:node.y+3, width:node.w-8, height:10, rx:4, fill:'white', opacity:0.1 }, g);
+  // Label
+  const lbl = el('text', {
+    x:node.x+node.w/2, y:node.y+node.h/2-7,
+    'text-anchor':'middle', fill:'#fff',
+    'font-size':10, 'font-weight':700,
+    'font-family':'Courier New, monospace',
+    'letter-spacing':1.5,
+    style:'pointer-events:none',
+  }, g);
+  lbl.textContent = node.label;
+  // Sub
+  const sub = el('text', {
+    x:node.x+node.w/2, y:node.y+node.h/2+9,
+    'text-anchor':'middle', fill:'rgba(255,255,255,0.7)',
+    'font-size':7.5, 'font-family':'Courier New, monospace',
+    style:'pointer-events:none',
+  }, g);
+  sub.textContent = node.sub;
+
+  g.addEventListener('mouseenter', () => {
+    rect.setAttribute('opacity', 1);
+    rect.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+    rect.setAttribute('stroke-width', 1.5);
+    rect.setAttribute('filter', 'url(#glow)');
+    edgeEls.forEach(e => {
+      if (e.from === node.id || e.to === node.id) {
+        e.path.setAttribute('stroke', '#64748b');
+        e.path.setAttribute('stroke-width', 2.5);
+        e.path.setAttribute('marker-end', 'url(#arrHot)');
+        e.lbl.setAttribute('opacity', 1);
+      }
+    });
+  });
+
+  g.addEventListener('mouseleave', () => {
+    rect.setAttribute('opacity', 0.85);
+    rect.setAttribute('stroke', 'rgba(255,255,255,0.1)');
+    rect.setAttribute('stroke-width', 1);
+    rect.removeAttribute('filter');
+    edgeEls.forEach(e => {
+      e.path.setAttribute('stroke', '#1e293b');
+      e.path.setAttribute('stroke-width', 1.5);
+      e.path.setAttribute('marker-end', 'url(#arr)');
+      e.lbl.setAttribute('opacity', 0);
+    });
+  });
+});
+</script>
+</body>
+</html>
