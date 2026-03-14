@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 Smart Power Monitor – Workflow Schematic</title>
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0d1117 !important; font-family:'Courier New',monospace; min-height:100vh; color:#e6edf3; }
+
+  .header {
+    background:#0d1117; border-bottom:1px solid #1a2332;
+    padding:18px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  }
+  .header-left .tag { color:#3fb950; font-size:9px; letter-spacing:6px; margin-bottom:6px; }
+  .header-left h1   { color:#e6edf3; font-size:18px; font-weight:700; letter-spacing:2px; }
+  .header-left .sub { color:#8b949e; font-size:9px; letter-spacing:2px; margin-top:4px; }
+  .header-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .badge { padding:4px 12px; border-radius:3px; font-size:8px; letter-spacing:2px; border:1px solid; }
+  .badge-green  { color:#3fb950; border-color:#3fb950; background:#021a06; }
+  .badge-blue   { color:#388bfd; border-color:#388bfd; background:#020d1f; }
+  .badge-orange { color:#f0a500; border-color:#f0a500; background:#1a0e00; }
+
+  .wrap { overflow:auto; padding:28px 20px 40px; display:flex; justify-content:center; }
+  svg  { display:block; }
+
+  .tooltip {
+    position:fixed; background:#161b22; border:1px solid #30363d;
+    border-radius:6px; padding:10px 14px; font-size:9px; color:#8b949e;
+    pointer-events:none; display:none; max-width:220px; z-index:99;
+    letter-spacing:0.5px; line-height:1.7;
+  }
+  .tooltip .tt-title { color:#e6edf3; font-size:10px; font-weight:700; margin-bottom:5px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="tag">WORKFLOW SCHEMATIC</div>
+    <h1>⚡ ESP32 SMART POWER MONITOR</h1>
+    <div class="sub">BOOT → SENSE → PROCESS → CORRECT → PUBLISH · REV 1.0 · KUMARESHAN V</div>
+  </div>
+  <div class="header-right">
+    <div class="badge badge-green">STATUS: COMPLETE</div>
+    <div class="badge badge-blue">REV 1.0</div>
+    <div class="badge badge-orange">220V AC</div>
+  </div>
+</div>
+
+<div class="wrap">
+<svg id="wf" width="1100" height="1520" viewBox="0 0 1100 1520">
+<defs>
+  <!-- Background grid -->
+  <pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse">
+    <circle cx="15" cy="15" r="0.7" fill="#111820"/>
+  </pattern>
+
+  <!-- Arrow markers -->
+  <marker id="aw"  markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#475569"/></marker>
+  <marker id="aw-g" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#3fb950"/></marker>
+  <marker id="aw-b" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#388bfd"/></marker>
+  <marker id="aw-o" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f0a500"/></marker>
+  <marker id="aw-r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ff7b72"/></marker>
+  <marker id="aw-p" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bc8cff"/></marker>
+  <marker id="aw-t" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#14b8a6"/></marker>
+
+  <!-- Glow filters -->
+  <filter id="glow-b" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glow-g" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glow-o" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+
+<!-- Background -->
+<rect width="1100" height="1520" fill="#080c14"/>
+<rect width="1100" height="1520" fill="url(#g)"/>
+<rect x="8" y="8" width="1084" height="1504" fill="none" stroke="#111820" stroke-width="1.5" rx="6"/>
+
+<!-- ═══════════════════════════════════════════════════════
+     PHASE LABELS (left margin swimlanes)
+════════════════════════════════════════════════════════ -->
+<!-- Phase 1: BOOT -->
+<rect x="14" y="24" width="60" height="180" rx="4" fill="#0f1b0f" stroke="#3fb950" stroke-width="1" opacity="0.7"/>
+<text x="44" y="120" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700" font-family="Courier New" transform="rotate(-90,44,120)" letter-spacing="3">BOOT</text>
+
+<!-- Phase 2: SAMPLE -->
+<rect x="14" y="218" width="60" height="160" rx="4" fill="#1a0e00" stroke="#f0a500" stroke-width="1" opacity="0.7"/>
+<text x="44" y="300" text-anchor="middle" fill="#f0a500" font-size="9" font-weight="700" font-family="Courier New" transform="rotate(-90,44,300)" letter-spacing="3">SAMPLE</text>
+
+<!-- Phase 3: PROCESS -->
+<rect x="14" y="392" width="60" height="300" rx="4" fill="#050515" stroke="#388bfd" stroke-width="1" opacity="0.7"/>
+<text x="44" y="542" text-anchor="middle" fill="#388bfd" font-size="9" font-weight="700" font-family="Courier New" transform="rotate(-90,44,542)" letter-spacing="3">PROCESS</text>
+
+<!-- Phase 4: DECIDE -->
+<rect x="14" y="706" width="60" height="200" rx="4" fill="#100020" stroke="#bc8cff" stroke-width="1" opacity="0.7"/>
+<text x="44" y="806" text-anchor="middle" fill="#bc8cff" font-size="9" font-weight="700" font-family="Courier New" transform="rotate(-90,44,806)" letter-spacing="3">DECIDE</text>
+
+<!-- Phase 5: CORRECT -->
+<rect x="14" y="920" width="60" height="200" rx="4" fill="#1a0520" stroke="#ec4899" stroke-width="1" opacity="0.7"/>
+<text x="44" y="1020" text-anchor="middle" fill="#ec4899" font-size="9" font-weight="700" font-family="Courier New" transform="rotate(-90,44,1020)" letter-spacing="3">CORRECT</text>
+
+<!-- Phase 6: PUBLISH -->
+<rect x="14" y="1134" width="60" height="200" rx="4" fill="#021a06" stroke="#3fb950" stroke-width="1" opacity="0.7"/>
+<text x="44" y="1234" text-anchor="middle" fill="#3fb950" font-size="9" font-weight="700" font-family="Courier New" transform="rotate(-90,44,1234)" letter-spacing="3">PUBLISH</text>
+
+<!-- Phase 7: PERSIST -->
+<rect x="14" y="1348" width="60" height="150" rx="4" fill="#002020" stroke="#14b8a6" stroke-width="1" opacity="0.7"/>
+<text x="44" y="1423" text-anchor="middle" fill="#14b8a6" font-size="9" font-weight="700" font-family="Courier New" transform="rotate(-90,44,1423)" letter-spacing="3">PERSIST</text>
+
+<!-- ═══════════════════════════════════════════════════════
+     NODES
+     All nodes use a helper pattern:
+       TERMINAL (rounded pill) for START/END
+       RECT for process steps
+       DIAMOND for decisions
+       PARALLELOGRAM for I/O
+════════════════════════════════════════════════════════ -->
+
+<!-- ── START ── -->
+<g class="node" data-title="System Power On" data-desc="ESP32 powers up. Boot sequence begins. All GPIO initialized.">
+  <rect x="420" y="30" width="260" height="48" rx="24" fill="#0f2a15" stroke="#3fb950" stroke-width="2" filter="url(#glow-g)"/>
+  <text x="550" y="50" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700" font-family="Courier New" letter-spacing="2">▶  SYSTEM START</text>
+  <text x="550" y="66" text-anchor="middle" fill="#8b949e" font-size="8" font-family="Courier New">ESP32 powers on · GPIO init</text>
+</g>
+
+<!-- Arrow START → NTP -->
+<line x1="550" y1="78" x2="550" y2="108" stroke="#3fb950" stroke-width="1.5" marker-end="url(#aw-g)"/>
+
+<!-- ── NTP SYNC ── -->
+<g class="node" data-title="NTP Time Sync" data-desc="ESP32 connects to Wi-Fi and syncs time from NTP server. Sets IST timezone offset. Retries on failure.">
+  <rect x="410" y="108" width="280" height="52" rx="5" fill="#030c1a" stroke="#388bfd" stroke-width="1.5"/>
+  <text x="550" y="128" text-anchor="middle" fill="#388bfd" font-size="10" font-weight="700" font-family="Courier New">Wi-Fi + NTP SYNC</text>
+  <text x="550" y="144" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Connect Wi-Fi → Sync NTP → Set IST timezone</text>
+</g>
+
+<!-- Arrow NTP → NVS RESTORE -->
+<line x1="550" y1="160" x2="550" y2="190" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── NVS RESTORE ── -->
+<g class="node" data-title="NVS Flash Restore" data-desc="Reads persisted data from NVS flash: accumulated kWh, min/max extremes, PF correction count, inrush history.">
+  <rect x="410" y="190" width="280" height="52" rx="5" fill="#002020" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="550" y="210" text-anchor="middle" fill="#14b8a6" font-size="10" font-weight="700" font-family="Courier New">NVS FLASH RESTORE</text>
+  <text x="550" y="226" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Load: kWh · Extremes · PF count · Inrush log</text>
+</g>
+
+<!-- Arrow NVS → SAMPLE -->
+<line x1="550" y1="242" x2="550" y2="270" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── SAMPLE PHASE ── -->
+
+<!-- AC SENSE (parallelogram-ish) -->
+<g class="node" data-title="AC Sensing — ADC Sampling" data-desc="ESP32 ADC samples ZMPT101B (voltage, GPIO34) and ACS712-30A (current, GPIO35) simultaneously at ~1000 samples per cycle. ZCD ISR (GPIO32) timestamps zero crossings.">
+  <rect x="330" y="270" width="440" height="58" rx="5" fill="#1a0505" stroke="#ff7b72" stroke-width="1.5"/>
+  <text x="550" y="292" text-anchor="middle" fill="#ff7b72" font-size="10" font-weight="700" font-family="Courier New">ADC SAMPLING</text>
+  <text x="550" y="308" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">ZMPT101B→GPIO34 (V) · ACS712→GPIO35 (I) · ZCD ISR→GPIO32 (freq)</text>
+</g>
+
+<!-- Parallel down arrows to freq + process -->
+<line x1="550" y1="328" x2="550" y2="358" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── FREQ MEASUREMENT ── -->
+<g class="node" data-title="Frequency Measurement" data-desc="ZCD ISR fires on every AC zero-crossing. Time delta between crossings gives live frequency measurement (nominally 50Hz).">
+  <rect x="330" y="358" width="440" height="46" rx="5" fill="#030c1a" stroke="#388bfd" stroke-width="1.5"/>
+  <text x="550" y="378" text-anchor="middle" fill="#388bfd" font-size="10" font-weight="700" font-family="Courier New">FREQUENCY MEASUREMENT</text>
+  <text x="550" y="392" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">ZCD ISR timestamps → Δt between zero crossings → f = 1/T Hz</text>
+</g>
+
+<line x1="550" y1="404" x2="550" y2="432" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── RMS COMPUTATION ── -->
+<g class="node" data-title="RMS Computation" data-desc="Computes Vrms and Irms from raw ADC samples. Also computes DC offset, peak values, and standard deviation of each waveform.">
+  <rect x="310" y="432" width="480" height="52" rx="5" fill="#0f0520" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="550" y="452" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700" font-family="Courier New">RMS COMPUTATION</text>
+  <text x="550" y="468" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Vrms · Irms · Vpeak · Ipeak · Vdc · Idc · StdDev(V) · StdDev(I)</text>
+</g>
+
+<line x1="550" y1="484" x2="550" y2="512" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── POWER CALCULATIONS ── -->
+<g class="node" data-title="Power Calculations" data-desc="Computes all power metrics: Real Power P (W), Reactive Power Q (VAR), Apparent Power S (VA), Complex Power, Power Factor (PF), phase angle φ, leading/lagging label.">
+  <rect x="240" y="512" width="620" height="58" rx="5" fill="#0f0520" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="550" y="534" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700" font-family="Courier New">POWER CALCULATIONS</text>
+  <text x="550" y="549" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">P(W) = Vrms·Irms·cos(φ)  ·  Q(VAR) = Vrms·Irms·sin(φ)  ·  S(VA) = Vrms·Irms  ·  PF = P/S</text>
+  <text x="550" y="562" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">Complex Power · Impedance Z(Ω) · Resistance R · Reactance X · Leading/Lagging/Unity label</text>
+</g>
+
+<line x1="550" y1="570" x2="550" y2="598" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── WAVEFORM QUALITY ── -->
+<g class="node" data-title="Waveform Quality Metrics" data-desc="Crest Factor = Vpeak/Vrms. Form Factor = Vrms/Vavg. These indicate signal distortion and waveform shape quality.">
+  <rect x="330" y="598" width="440" height="46" rx="5" fill="#0f0520" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="550" y="618" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700" font-family="Courier New">WAVEFORM QUALITY</text>
+  <text x="550" y="632" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Crest Factor · Form Factor · Waveform StdDev</text>
+</g>
+
+<line x1="550" y1="644" x2="550" y2="672" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── LOAD DETECTION ── -->
+<g class="node" data-title="Load Type Detection" data-desc="Classifies load based on PF and phase angle: Resistive (PF≈1), Inductive (lagging PF), Capacitive (leading PF), Non-linear (high crest factor), or No Load.">
+  <rect x="330" y="672" width="440" height="46" rx="5" fill="#0f0520" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="550" y="692" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700" font-family="Courier New">LOAD TYPE DETECTION</text>
+  <text x="550" y="706" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Resistive · Inductive · Capacitive · Non-linear · No Load</text>
+</g>
+
+<line x1="550" y1="718" x2="550" y2="746" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── INRUSH DETECTION (DECISION) ── -->
+<!-- Diamond -->
+<g class="node" data-title="Inrush Current Check" data-desc="Computes Ipeak/Irms ratio. If ratio > threshold, logs an inrush event to Blynk, timestamps it, stores max inrush ratio in NVS.">
+  <polygon points="550,746 700,784 550,822 400,784" fill="#100015" stroke="#bc8cff" stroke-width="1.5"/>
+  <text x="550" y="780" text-anchor="middle" fill="#bc8cff" font-size="10" font-weight="700" font-family="Courier New">INRUSH DETECTED?</text>
+  <text x="550" y="796" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Ipeak / Irms &gt; threshold</text>
+  <!-- YES / NO labels -->
+  <text x="716" y="788" fill="#ff7b72" font-size="8" font-family="Courier New">YES</text>
+  <text x="550" y="835" text-anchor="middle" fill="#3fb950" font-size="8" font-family="Courier New">NO</text>
+</g>
+
+<!-- YES branch → Inrush event log (right) -->
+<line x1="700" y1="784" x2="800" y2="784" stroke="#ff7b72" stroke-width="1.5" marker-end="url(#aw-r)"/>
+<g class="node" data-title="Log Inrush Event" data-desc="Saves inrush timestamp and peak ratio to NVS. Triggers Blynk event notification via V57. Updates max inrush ratio (V59).">
+  <rect x="800" y="760" width="190" height="48" rx="5" fill="#1a0505" stroke="#ff7b72" stroke-width="1.5"/>
+  <text x="895" y="780" text-anchor="middle" fill="#ff7b72" font-size="9" font-weight="700" font-family="Courier New">LOG INRUSH EVENT</text>
+  <text x="895" y="795" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">NVS · Blynk V57/V59 · Timestamp</text>
+</g>
+<!-- Inrush log → rejoin at PF decision -->
+<line x1="895" y1="808" x2="895" y2="870" stroke="#ff7b72" stroke-width="1.2" stroke-dasharray="5,3"/>
+<line x1="895" y1="870" x2="700" y2="870" stroke="#ff7b72" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#aw-r)"/>
+
+<!-- NO branch continues down -->
+<line x1="550" y1="822" x2="550" y2="856" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── PF DECISION ── -->
+<g class="node" data-title="Power Factor Check" data-desc="Checks if PF < correction threshold. Only triggers correction after 3 consecutive bad-PF cycles (hysteresis) to avoid relay hunting.">
+  <polygon points="550,856 700,894 550,932 400,894" fill="#0d0020" stroke="#ec4899" stroke-width="1.5"/>
+  <text x="550" y="889" text-anchor="middle" fill="#ec4899" font-size="10" font-weight="700" font-family="Courier New">PF &lt; THRESHOLD?</text>
+  <text x="550" y="905" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">AND 3 consecutive bad cycles?</text>
+  <!-- labels -->
+  <text x="716" y="898" fill="#ff7b72" font-size="8" font-family="Courier New">YES</text>
+  <text x="550" y="946" text-anchor="middle" fill="#3fb950" font-size="8" font-family="Courier New">NO</text>
+</g>
+
+<!-- YES → PF correction -->
+<line x1="700" y1="894" x2="800" y2="894" stroke="#ec4899" stroke-width="1.5" marker-end="url(#aw-p)"/>
+<g class="node" data-title="Calculate Target Capacitance" data-desc="Uses C = Q / (2π·f·V²) where Q = P × tan(φ). Determines which combination of the 7 capacitors {1,2,3,4,5,6,15 µF} gives the required 1–36µF.">
+  <rect x="800" y="866" width="190" height="56" rx="5" fill="#1a0520" stroke="#ec4899" stroke-width="1.5"/>
+  <text x="895" y="884" text-anchor="middle" fill="#ec4899" font-size="9" font-weight="700" font-family="Courier New">CALC TARGET C</text>
+  <text x="895" y="898" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">C = Q / (2π·f·V²)</text>
+  <text x="895" y="912" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">Q = P·tan(φ) → 1–36µF</text>
+</g>
+
+<line x1="895" y1="922" x2="895" y2="952" stroke="#ec4899" stroke-width="1.5" marker-end="url(#aw-p)"/>
+
+<!-- ── ZVS WAIT ── -->
+<g class="node" data-title="Wait for Zero Voltage Crossing" data-desc="Holds relay switching until the ZCD ISR fires — i.e., until the AC waveform crosses 0V. This eliminates inrush and contact arcing on relay closure.">
+  <rect x="800" y="952" width="190" height="52" rx="5" fill="#1a0520" stroke="#ec4899" stroke-width="1.5"/>
+  <text x="895" y="972" text-anchor="middle" fill="#ec4899" font-size="9" font-weight="700" font-family="Courier New">WAIT FOR ZVS</text>
+  <text x="895" y="986" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">ZCD ISR → zero voltage point</text>
+  <text x="895" y="998" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">Prevents relay arcing &amp; inrush</text>
+</g>
+
+<line x1="895" y1="1004" x2="895" y2="1034" stroke="#ec4899" stroke-width="1.5" marker-end="url(#aw-p)"/>
+
+<!-- ── SWITCH CAPS ── -->
+<g class="node" data-title="Switch Capacitor Relays" data-desc="Activates the correct relay combination via GPIO 25, 26, 27, 14, 12, 13, 33. The capacitors are switched onto the AC line at the zero-voltage instant.">
+  <rect x="800" y="1034" width="190" height="52" rx="5" fill="#1a0520" stroke="#ec4899" stroke-width="1.5"/>
+  <text x="895" y="1054" text-anchor="middle" fill="#ec4899" font-size="9" font-weight="700" font-family="Courier New">SWITCH RELAYS</text>
+  <text x="895" y="1068" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">GPIO 25,26,27,14,12,13,33</text>
+  <text x="895" y="1080" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">Cap bank → AC line (ZVS)</text>
+</g>
+
+<!-- Relay switches join back -->
+<line x1="895" y1="1086" x2="895" y2="1120" stroke="#ec4899" stroke-width="1.2" stroke-dasharray="5,3"/>
+<line x1="895" y1="1120" x2="700" y2="1120" stroke="#ec4899" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#aw-p)"/>
+
+<!-- NO branch from PF decision → down to 1120 -->
+<line x1="550" y1="932" x2="550" y2="1120" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+<!-- Junction dot at (550,1120) -->
+
+<!-- ── PUBLISH PHASE ── -->
+<line x1="550" y1="1120" x2="550" y2="1150" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── UPDATE EXTREMES ── -->
+<g class="node" data-title="Update Extremes Tracking" data-desc="Compares current V, I, F, PF to stored min/max. Updates if new extreme is found. Timestamps using NTP-synced time.">
+  <rect x="330" y="1150" width="440" height="46" rx="5" fill="#031a06" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="550" y="1170" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700" font-family="Courier New">UPDATE EXTREMES</text>
+  <text x="550" y="1184" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Min/Max V · I · F · PF · timestamps (V30–V46)</text>
+</g>
+
+<line x1="550" y1="1196" x2="550" y2="1224" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<!-- ── BLYNK PUSH ── -->
+<g class="node" data-title="Blynk IoT Push" data-desc="Pushes all measurements to Blynk virtual pins every 1 second. V0=Vrms, V1=Irms, V2=P, V3–V9=cap states, V11=kWh, V12=S, V13=Q, V14=PF, V15=Freq, V16–V62 etc.">
+  <rect x="170" y="1224" width="340" height="56" rx="5" fill="#031a06" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="340" y="1246" text-anchor="middle" fill="#3fb950" font-size="10" font-weight="700" font-family="Courier New">BLYNK PUSH</text>
+  <text x="340" y="1261" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Every 1s · V0–V62 virtual pins</text>
+  <text x="340" y="1273" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">V · I · P · Q · S · PF · F · Z · Load · Temp · kWh</text>
+</g>
+
+<!-- ── ADAFRUIT IO PUSH ── -->
+<g class="node" data-title="Adafruit IO Push" data-desc="Pushes key metrics to Adafruit IO feeds every 3 seconds for cloud logging, historical charts, and dashboards.">
+  <rect x="590" y="1224" width="340" height="56" rx="5" fill="#021a06" stroke="#2da44e" stroke-width="1.5"/>
+  <text x="760" y="1246" text-anchor="middle" fill="#2da44e" font-size="10" font-weight="700" font-family="Courier New">ADAFRUIT IO PUSH</text>
+  <text x="760" y="1261" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">Every 3s · Cloud logging &amp; history</text>
+  <text x="760" y="1273" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">V · I · P · PF · F · kWh · PFC count</text>
+</g>
+
+<!-- Arrows from extremes to Blynk/Adafruit -->
+<line x1="450" y1="1196" x2="340" y2="1224" stroke="#3fb950" stroke-width="1.5" marker-end="url(#aw-g)"/>
+<line x1="650" y1="1196" x2="760" y2="1224" stroke="#2da44e" stroke-width="1.5" marker-end="url(#aw-g)"/>
+
+<!-- ── NVS SAVE ── -->
+<line x1="340" y1="1280" x2="340" y2="1320" stroke="#475569" stroke-width="1.5"/>
+<line x1="760" y1="1280" x2="760" y2="1320" stroke="#475569" stroke-width="1.5"/>
+<line x1="340" y1="1320" x2="760" y2="1320" stroke="#475569" stroke-width="1.5"/>
+<line x1="550" y1="1320" x2="550" y2="1348" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+
+<g class="node" data-title="NVS Flash Save" data-desc="Periodically writes kWh accumulation, min/max extremes, PF correction count, and inrush event log to NVS flash. Data survives reboots.">
+  <rect x="360" y="1348" width="380" height="52" rx="5" fill="#002020" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="550" y="1368" text-anchor="middle" fill="#14b8a6" font-size="10" font-weight="700" font-family="Courier New">NVS FLASH SAVE</text>
+  <text x="550" y="1383" text-anchor="middle" fill="#8b949e" font-size="7.5" font-family="Courier New">kWh · Extremes · PFC count · Inrush log</text>
+  <text x="550" y="1396" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">Persists across reboots</text>
+</g>
+
+<!-- ── LOOP BACK arrow ── -->
+<line x1="550" y1="1400" x2="550" y2="1460" stroke="#475569" stroke-width="1.5"/>
+<line x1="90" y1="1460" x2="550" y2="1460" stroke="#475569" stroke-width="1.5"/>
+<line x1="90" y1="328" x2="90" y2="1460" stroke="#475569" stroke-width="1.5"/>
+<line x1="90" y1="328" x2="330" y2="328" stroke="#475569" stroke-width="1.5" marker-end="url(#aw)"/>
+<!-- Loop label -->
+<rect x="50" y="860" width="24" height="140" rx="4" fill="#111820" stroke="#475569" stroke-width="1"/>
+<text x="62" y="938" text-anchor="middle" fill="#475569" font-size="8" font-family="Courier New" transform="rotate(-90,62,938)" letter-spacing="2">LOOP / ~1s CYCLE</text>
+
+<!-- ── CHIP TEMP (side branch from ESP32) ── -->
+<line x1="830" y1="598" x2="900" y2="598" stroke="#14b8a6" stroke-width="1.2" stroke-dasharray="4,2"/>
+<g class="node" data-title="Chip Temperature" data-desc="ESP32 internal temperature sensor is read and sent to Blynk V28. No external sensor required.">
+  <rect x="900" y="574" width="160" height="48" rx="5" fill="#002020" stroke="#14b8a6" stroke-width="1.2"/>
+  <text x="980" y="594" text-anchor="middle" fill="#14b8a6" font-size="9" font-weight="700" font-family="Courier New">CHIP TEMP</text>
+  <text x="980" y="609" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">Internal sensor → Blynk V28</text>
+</g>
+
+<!-- ── ENERGY ACCUMULATION (side) ── -->
+<line x1="830" y1="543" x2="900" y2="543" stroke="#f0a500" stroke-width="1.2" stroke-dasharray="4,2"/>
+<g class="node" data-title="Energy Accumulation" data-desc="kWh is accumulated each cycle: kWh += P × Δt / 3600000. Monthly estimate is projected from current rate. Both pushed to Blynk V11 and V29.">
+  <rect x="900" y="518" width="170" height="52" rx="5" fill="#1a0e00" stroke="#f0a500" stroke-width="1.2"/>
+  <text x="985" y="537" text-anchor="middle" fill="#f0a500" font-size="9" font-weight="700" font-family="Courier New">ENERGY ACCUM.</text>
+  <text x="985" y="551" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">kWh += P·Δt/3600000</text>
+  <text x="985" y="563" text-anchor="middle" fill="#8b949e" font-size="7" font-family="Courier New">Monthly estimate → V29</text>
+</g>
+
+<!-- ═══════════════════════════════════════
+     LEGEND
+════════════════════════════════════════ -->
+<rect x="84" y="1470" width="930" height="38" rx="4" fill="#0d1117" stroke="#1a2332" stroke-width="1"/>
+<!-- Items -->
+<rect x="100" y="1482" width="26" height="14" rx="2" fill="#0f2a15" stroke="#3fb950" stroke-width="1"/>
+<text x="132" y="1493" fill="#3fb950" font-size="8" font-family="Courier New">BOOT/PUBLISH</text>
+<rect x="240" y="1482" width="26" height="14" rx="2" fill="#030c1a" stroke="#388bfd" stroke-width="1"/>
+<text x="272" y="1493" fill="#388bfd" font-size="8" font-family="Courier New">SIGNAL/SAMPLE</text>
+<rect x="390" y="1482" width="26" height="14" rx="2" fill="#0f0520" stroke="#bc8cff" stroke-width="1"/>
+<text x="422" y="1493" fill="#bc8cff" font-size="8" font-family="Courier New">PROCESS</text>
+<polygon points="540,1489 555,1482 570,1489 555,1496" fill="#0d0020" stroke="#ec4899" stroke-width="1"/>
+<text x="578" y="1493" fill="#ec4899" font-size="8" font-family="Courier New">DECISION</text>
+<rect x="670" y="1482" width="26" height="14" rx="2" fill="#1a0520" stroke="#ec4899" stroke-width="1"/>
+<text x="702" y="1493" fill="#ec4899" font-size="8" font-family="Courier New">PF CORRECT</text>
+<rect x="810" y="1482" width="26" height="14" rx="2" fill="#002020" stroke="#14b8a6" stroke-width="1"/>
+<text x="842" y="1493" fill="#14b8a6" font-size="8" font-family="Courier New">PERSIST</text>
+</svg>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tt">
+  <div class="tt-title" id="tt-title"></div>
+  <div id="tt-body"></div>
+</div>
+
+<script>
+// Tooltip on node hover
+document.querySelectorAll('.node').forEach(n => {
+  n.style.cursor = 'pointer';
+  n.addEventListener('mouseenter', e => {
+    const tt = document.getElementById('tt');
+    document.getElementById('tt-title').textContent = n.dataset.title || '';
+    document.getElementById('tt-body').textContent  = n.dataset.desc  || '';
+    tt.style.display = 'block';
+  });
+  n.addEventListener('mousemove', e => {
+    const tt = document.getElementById('tt');
+    tt.style.left = (e.clientX + 14) + 'px';
+    tt.style.top  = (e.clientY + 14) + 'px';
+  });
+  n.addEventListener('mouseleave', () => {
+    document.getElementById('tt').style.display = 'none';
+  });
+});
+</script>
+</body>
+</html>
